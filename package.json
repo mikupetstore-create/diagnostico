@@ -1,16 +1,11 @@
 {
-  "name": "diagnostico",
+  "name": "diagnostico-pet-ai",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "start": "node api/diagnose.js"
   },
   "dependencies": {
-    "next": "14.1.0",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "busboy": "^1.6.0",
-    "openai": "^4.0.0"
+    "openai": "4.0.0"
   }
 }

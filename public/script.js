@@ -2,23 +2,26 @@ async function sendImage() {
   const file = document.getElementById("fileInput").files[0];
   if (!file) return alert("Sube una imagen");
 
-  const base64 = await toBase64(file);
+  const reader = new FileReader();
 
-  const response = await fetch("/api/diagnose", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ imageBase64: base64.split(",")[1] })
-  });
+  reader.onloadend = async () => {
+    const base64Image = reader.result.split(",")[1];
 
-  const data = await response.json();
-  document.getElementById("result").textContent = JSON.stringify(data, null, 2);
-}
+    try {
+      const res = await fetch("/api/diagnose", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: "data:image/jpeg;base64," + base64Image })
+      });
 
-function toBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+      const json = await res.json();
+
+      document.getElementById("output").textContent =
+        json.error || json.diagnosis || "Sin respuesta";
+    } catch (e) {
+      document.getElementById("output").textContent = "Error al conectar con el servidor";
+    }
+  };
+
+  reader.readAsDataURL(file);
 }
