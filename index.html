@@ -1,135 +1,89 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Diagnóstico instantáneo para tu mascota</title>
-<style>
-  body{font-family:Inter,system-ui,Arial;background:#fff;margin:0;padding:0;display:flex;align-items:center;justify-content:center;min-height:100vh}
-  .card{width:100%;max-width:480px;padding:20px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.07)}
-  h1{margin:0 0 8px;font-size:20px}
-  p{margin:0 0 12px;color:#555}
-  .uploader{border:2px dashed #e6e6e6;padding:14px;border-radius:10px;text-align:center;cursor:pointer}
-  input[type=file]{display:none}
-  .preview{margin-top:12px;width:100%;height:260px;object-fit:cover;border-radius:8px}
-  .btn{display:inline-block;padding:10px 14px;border-radius:10px;background:#06b6d4;color:#fff;border:0;cursor:pointer;margin-top:12px}
-  .small{font-size:13px;color:#777;margin-top:8px}
-  .results{margin-top:16px}
-  .product{border:1px solid #eee;padding:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;margin-top:10px}
-  .product img{width:64px;height:64px;object-fit:cover;border-radius:6px}
-  .loader{display:inline-block;border:4px solid #f3f3f3;border-top:4px solid #06b6d4;border-radius:50%;width:28px;height:28px;animation:spin .9s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnóstico de Mascotas</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .preview { margin-top: 15px; max-width: 300px; }
+    #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; }
+  </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Diagnóstico instantáneo para tu mascota</h1>
-    <p>Sube una foto y en segundos te digo qué podría estar pasando y 3 productos que ayudan.</p>
+  <h1>Diagnóstico de Mascotas</h1>
 
-    <label class="uploader" id="uploader">
-      <div id="uploaderText">Haz click o arrastra para subir una foto</div>
-      <input id="photo" type="file" accept="image/*" />
-    </label>
+  <label>Especie:</label>
+  <input type="text" id="species" placeholder="ej: perro, gato"><br><br>
 
-    <img id="preview" class="preview" style="display:none" alt="preview"/>
+  <label>País:</label>
+  <input type="text" id="country" placeholder="ej: Colombia, México"><br><br>
 
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <select id="species" style="flex:1;padding:8px;border-radius:8px;border:1px solid #eee">
-        <option value="dog">Perro</option>
-        <option value="cat">Gato</option>
-        <option value="other">Otro</option>
-      </select>
-      <select id="country" style="width:120px;padding:8px;border-radius:8px;border:1px solid #eee">
-        <option value="us">US</option>
-        <option value="mx">MX</option>
-        <option value="es">ES</option>
-        <option value="br">BR</option>
-      </select>
-    </div>
+  <input type="file" id="imageInput" accept="image/*"><br><br>
 
-    <button id="analyzeBtn" class="btn" style="width:100%">Analizar ahora</button>
-    <div class="small">No guardamos imágenes. Esto no sustituye a un veterinario.</div>
+  <img id="preview" class="preview" style="display:none;">
 
-    <div id="status" class="small" style="margin-top:12px"></div>
+  <button onclick="sendImage()">Analizar Imagen</button>
 
-    <div id="results" class="results"></div>
-  </div>
+  <div id="result"></div>
 
-<script>
-const photoInput = document.getElementById('photo');
-const preview = document.getElementById('preview');
-const uploaderText = document.getElementById('uploaderText');
-const analyzeBtn = document.getElementById('analyzeBtn');
-const status = document.getElementById('status');
-const results = document.getElementById('results');
-const species = document.getElementById('species');
-const country = document.getElementById('country');
+  <script>
+    const API = "/api/diagnose"; // ← Corrección importante
 
-let fileBlob = null;
-document.getElementById('uploader').addEventListener('click', ()=> photoInput.click());
-photoInput.addEventListener('change', (ev)=>{
-  const f = ev.target.files[0];
-  if(!f) return;
-  fileBlob = f;
-  preview.src = URL.createObjectURL(f);
-  preview.style.display = 'block';
-  uploaderText.innerText = 'Imagen lista';
-  results.innerHTML = '';
-});
+    const preview = document.getElementById('preview');
+    document.getElementById('imageInput').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+      }
+    });
 
-analyzeBtn.addEventListener('click', async ()=>{
-  if(!fileBlob){ alert('Sube una foto primero'); return; }
-  status.innerHTML = '<span class="loader"></span> Analizando...';
-  analyzeBtn.disabled = true;
+    async function sendImage() {
+      const species = document.getElementById('species').value;
+      const country = document.getElementById('country').value;
+      const file = document.getElementById('imageInput').files[0];
 
-  try{
-    const fd = new FormData();
-    fd.append('photo', fileBlob);
-    fd.append('species', species.value);
-    fd.append('country', country.value);
+      if (!file) {
+        alert("Por favor selecciona una imagen");
+        return;
+      }
 
-    // Cambia por tu URL Vercel
-    const API = 'https://diagnostico-khaki.vercel.app/';
+      const fd = new FormData();
+      fd.append("image", file);
+      fd.append("species", species);
+      fd.append("country", country);
 
-    const res = await fetch(API, { method:'POST', body: fd });
-    if(!res.ok) throw new Error('Error servidor');
-    const json = await res.json();
+      document.getElementById('result').innerHTML = "Analizando...";
 
-    renderResult(json);
-  } catch(err){
-    console.error(err);
-    status.textContent = 'Error procesando la imagen. Intenta de nuevo.';
-  } finally{
-    analyzeBtn.disabled = false;
-  }
-});
+      try {
+        const res = await fetch(API, {
+          method: "POST",
+          body: fd
+        });
 
-function renderResult(data){
-  status.textContent = '';
-  if(data.error){
-    results.innerHTML = '<div style="color:#c00">'+data.error+'</div>';
-    return;
-  }
+        const data = await res.json();
 
-  const { summary, severity, recommendedProducts } = data;
-  let html = `<div><strong>Resultado:</strong> ${summary}</div>`;
-  html += `<div style="margin-top:6px"><strong>Nivel:</strong> ${severity}</div>`;
-  html += '<div style="margin-top:12px"><strong>Productos recomendados</strong></div>';
-  recommendedProducts.forEach(p=>{
-    html += `<div class="product">
-      <div style="flex:1;margin-right:10px">
-        <div style="font-weight:600">${p.title}</div>
-        <div style="font-size:13px;color:#666">${p.reason}</div>
-      </div>
-      <div style="text-align:right">
-        <a href="${p.affiliateLink}" target="_blank" style="background:#06b6d4;color:#fff;padding:8px;border-radius:8px;text-decoration:none">Comprar</a>
-      </div>
-    </div>`;
-  });
+        if (data.error) throw new Error(data.error);
 
-  results.innerHTML = html;
-}
-</script>
+        document.getElementById('result').innerHTML =
+          `<strong>Resumen:</strong> ${data.summary}<br><br>
+           <strong>Severidad:</strong> ${data.severity}<br><br>
+           <strong>Productos recomendados:</strong><br>
+           <ul>
+             ${data.recommendedProducts.map(p => `
+               <li>
+                 <strong>${p.title}</strong><br>
+                 ${p.reason}<br>
+                 <a href="${p.affiliateLink}" target="_blank">Comprar</a>
+               </li>
+             `).join("")}
+           </ul>`;
+      } catch (err) {
+        document.getElementById('result').innerHTML =
+          "Error procesando la imagen: " + err.message;
+      }
+    }
+  </script>
 </body>
 </html>
-
