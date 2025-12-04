@@ -89,7 +89,7 @@ analyzeBtn.addEventListener('click', async ()=>{
     fd.append('country', country.value);
 
     // Cambia por tu URL Vercel
-    const API = 'https://diagnostico-14ds.vercel.app/';
+    const API = 'diagnostico-14ds-6ttcv2m9p-alexander-jaras-projects.vercel.app';
 
     const res = await fetch(API, { method:'POST', body: fd });
     if(!res.ok) throw new Error('Error servidor');
@@ -132,4 +132,5 @@ function renderResult(data){
 </script>
 </body>
 </html>
+
 
