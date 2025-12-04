@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { image } = req.body;
+    const { image, species, country } = req.body;
 
     if (!image) {
       return res.status(400).json({ error: "No se envió imagen" });
@@ -22,20 +22,19 @@ export default async function handler(req, res) {
         {
           role: "user",
           content: [
-            { type: "text", text: "Describe esta imagen de una mascota y detecta problemas visibles" },
+            { type: "text", text: `Analiza esta mascota (${species}, ${country})` },
             { type: "image_url", image_url: { url: image } }
           ]
         }
-      ],
-      max_tokens: 200
+      ]
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       diagnosis: completion.choices[0].message.content
     });
 
   } catch (err) {
-    console.log("Error:", err);
-    return res.status(500).json({ error: "Error procesando imagen" });
+    console.log("ERR BACKEND:", err);
+    res.status(500).json({ error: "Error procesando imagen" });
   }
 }
