@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagnóstico Veterinario</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+
+    input[type="text"], input[type="file"] {
+      margin-top: 5px;
+      margin-bottom: 15px;
+      width: 100%;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    #preview {
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+      margin-top: 10px;
+      display: none;
+      border-radius: 10px;
+    }
+
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fffbe6;
+      border-left: 4px solid #ffc107;
+      border-radius: 5px;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Diagnóstico Veterinario</h1>
+
+    <label>Especie:</label>
+    <input type="text" id="species" placeholder="Ej: perro, gato" />
+
+    <label>País:</label>
+    <input type="text" id="country" placeholder="Ej: México, Colombia" />
+
+    <label>Selecciona una imagen:</label>
+    <input type="file" id="imageInput" accept="image/*" />
+
+    <img id="preview" />
+
+    <button onclick="sendImage()">Analizar Imagen</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    // ✔ API fijada correctamente a la ruta de Next.js
+    const API = "/api/diagnose";
+
+    const preview = document.getElementById("preview");
+    document.getElementById("imageInput").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+      }
+    });
+
+    async function sendImage() {
+      const species = document.getElementById("species").value;
+      const country = document.getElementById("country").value;
+      const file = document.getElementById("imageInput").files[0];
+      const resultDiv = document.getElementById("result");
+
+      if (!file) {
+        alert("Por favor selecciona una imagen primero.");
+        return;
+      }
+
+      resultDiv.style.display = "block";
+      resultDiv.innerHTML = "Analizando imagen...";
+
+      const fd = new FormData();
+      fd.append("image", file);
+      fd.append("species", species);
+      fd.append("country", country);
+
+      try {
+        const res = await fetch(API, {
+          method: "POST",
+          body: fd,
+        });
+
+        // Si la respuesta NO es JSON, lo capturamos antes de romper
+        const contentType = res.headers.get("content-type");
+
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await res.text();
+          throw new Error(
+            "La API devolvió HTML en lugar de JSON. Respuesta:\n" + text
+          );
+        }
+
+        const data = await res.json();
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        resultDiv.innerHTML = `
+          <strong>Resultado:</strong><br><br>
+          <strong>Descripción:</strong> ${data.summary}<br><br>
+          <strong>Severidad:</strong> ${data.severity}<br><br>
+          <strong>Productos recomendados:</strong>
+          <ul>
+            ${data.recommendedProducts
+              .map(
+                (p) => `
+              <li>
+                <strong>${p.title}</strong><br>
+                ${p.reason}<br>
+                <a href="${p.affiliateLink}" target="_blank">Comprar</a>
+              </li>
+            `
+              )
+              .join("")}
+          </ul>
+        `;
+      } catch (err) {
+        resultDiv.innerHTML =
+          "Error procesando la imagen: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
