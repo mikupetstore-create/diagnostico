@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Diagnóstico Veterinario</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico de Mascotas</title>
 
-  <style>
+<style>
   body{font-family:Inter,system-ui,Arial;background:#fff;margin:0;padding:0;display:flex;align-items:center;justify-content:center;min-height:100vh}
   .card{width:100%;max-width:480px;padding:20px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.07)}
   h1{margin:0 0 8px;font-size:20px}
   p{margin:0 0 12px;color:#555}
   .uploader{border:2px dashed #e6e6e6;padding:14px;border-radius:10px;text-align:center;cursor:pointer}
   input[type=file]{display:none}
-  .preview{margin-top:12px;width:100%;height:260px;object-fit:cover;border-radius:8px}
-  .btn{display:inline-block;padding:10px 14px;border-radius:10px;background:#06b6d4;color:#fff;border:0;cursor:pointer;margin-top:12px}
+  .preview{margin-top:12px;width:100%;height:260px;object-fit:cover;border-radius:8px;display:none}
+  .btn{display:inline-block;padding:10px 14px;border-radius:10px;background:#06b6d4;color:#fff;border:0;cursor:pointer;margin-top:12px;width:100%}
   .small{font-size:13px;color:#777;margin-top:8px}
   .results{margin-top:16px}
   .product{border:1px solid #eee;padding:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;margin-top:10px}
@@ -21,104 +21,98 @@
   .loader{display:inline-block;border:4px solid #f3f3f3;border-top:4px solid #06b6d4;border-radius:50%;width:28px;height:28px;animation:spin .9s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
 </style>
+</head>
+
 <body>
-  <div class="container">
-    <h1>Diagnóstico Veterinario</h1>
+<div class="card">
+  <h1>Diagnóstico Veterinario</h1>
+  <p>Sube una foto de tu mascota para analizar posibles problemas de salud.</p>
 
-    <label>Especie:</label>
-    <input type="text" id="species" placeholder="Ej: perro, gato" />
+  <label>Especie</label>
+  <input id="species" type="text" placeholder="Ej: perro, gato" style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #ddd">
 
-    <label>País:</label>
-    <input type="text" id="country" placeholder="Ej: México, Colombia" />
+  <label style="margin-top:10px">País</label>
+  <input id="country" type="text" placeholder="Ej: México, Colombia" style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #ddd">
 
-    <label>Selecciona una imagen:</label>
-    <input type="file" id="imageInput" accept="image/*" />
-
-    <img id="preview" />
-
-    <button onclick="sendImage()">Analizar Imagen</button>
-
-    <div id="result"></div>
+  <div class="uploader" onclick="document.getElementById('imageInput').click()">
+    Haz clic para subir una imagen
+    <input id="imageInput" type="file" accept="image/*">
   </div>
 
-  <script>
-    // ✔ API fijada correctamente a la ruta de Next.js
-    const API = "/api/diagnose";
+  <img id="preview" class="preview"/>
 
-    const preview = document.getElementById("preview");
-    document.getElementById("imageInput").addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        preview.src = URL.createObjectURL(file);
-        preview.style.display = "block";
-      }
-    });
+  <button class="btn" onclick="sendImage()">Analizar imagen</button>
 
-    async function sendImage() {
-      const species = document.getElementById("species").value;
-      const country = document.getElementById("country").value;
-      const file = document.getElementById("imageInput").files[0];
-      const resultDiv = document.getElementById("result");
+  <div id="result" class="results"></div>
+</div>
 
-      if (!file) {
-        alert("Por favor selecciona una imagen primero.");
-        return;
-      }
+<script>
+const API = "/api/diagnose";  // ← IMPORTANTE: Apunta a Next.js API Route
 
-      resultDiv.style.display = "block";
-      resultDiv.innerHTML = "Analizando imagen...";
+// Preview de la imagen
+document.getElementById("imageInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const preview = document.getElementById("preview");
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = "block";
+});
 
-      const fd = new FormData();
-      fd.append("image", file);
-      fd.append("species", species);
-      fd.append("country", country);
+// Lógica principal del análisis
+async function sendImage() {
+  const resultDiv = document.getElementById("result");
+  const species = document.getElementById("species").value;
+  const country = document.getElementById("country").value;
+  const file = document.getElementById("imageInput").files[0];
 
-      try {
-        const res = await fetch(API, {
-          method: "POST",
-          body: fd,
-        });
+  if (!file) {
+    alert("Debes seleccionar una imagen primero.");
+    return;
+  }
 
-        // Si la respuesta NO es JSON, lo capturamos antes de romper
-        const contentType = res.headers.get("content-type");
+  // Loader animado
+  resultDiv.innerHTML = '<div class="loader"></div>';
+  
+  const fd = new FormData();
+  fd.append("image", file);
+  fd.append("species", species);
+  fd.append("country", country);
 
-        if (!contentType || !contentType.includes("application/json")) {
-          const text = await res.text();
-          throw new Error(
-            "La API devolvió HTML en lugar de JSON. Respuesta:\n" + text
-          );
-        }
+  try {
+    const res = await fetch(API, { method: "POST", body: fd });
 
-        const data = await res.json();
-
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        resultDiv.innerHTML = `
-          <strong>Resultado:</strong><br><br>
-          <strong>Descripción:</strong> ${data.summary}<br><br>
-          <strong>Severidad:</strong> ${data.severity}<br><br>
-          <strong>Productos recomendados:</strong>
-          <ul>
-            ${data.recommendedProducts
-              .map(
-                (p) => `
-              <li>
-                <strong>${p.title}</strong><br>
-                ${p.reason}<br>
-                <a href="${p.affiliateLink}" target="_blank">Comprar</a>
-              </li>
-            `
-              )
-              .join("")}
-          </ul>
-        `;
-      } catch (err) {
-        resultDiv.innerHTML =
-          "Error procesando la imagen: " + err.message;
-      }
+    // Verificar si la respuesta es JSON
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const text = await res.text();
+      throw new Error("La API devolvió HTML (404). Ruta no encontrada:\n" + text);
     }
-  </script>
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    // Render de resultados
+    resultDiv.innerHTML = `
+      <h3>Resultado</h3>
+      <p>${data.summary}</p>
+      <p><strong>Severidad:</strong> ${data.severity}</p>
+
+      <h3>Recomendaciones</h3>
+      ${data.recommendedProducts.map(p => `
+        <div class="product">
+          <div>
+            <strong>${p.title}</strong><br>
+            ${p.reason}<br>
+            <a href="${p.affiliateLink}" target="_blank">Comprar</a>
+          </div>
+          <img src="https://placekitten.com/64/64">
+        </div>
+      `).join("")}
+    `;
+  } catch (err) {
+    resultDiv.innerHTML = `<p style="color:red"><strong>Error:</strong> ${err.message}</p>`;
+  }
+}
+</script>
 </body>
 </html>
