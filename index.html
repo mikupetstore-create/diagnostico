@@ -89,7 +89,7 @@ analyzeBtn.addEventListener('click', async ()=>{
     fd.append('country', country.value);
 
     // Cambia por tu URL Vercel
-    const API = 'https://diagnostico-14ds.vercel.app/';
+    const API = 'https://diagnostico-khaki.vercel.app/';
 
     const res = await fetch(API, { method:'POST', body: fd });
     if(!res.ok) throw new Error('Error servidor');
@@ -132,3 +132,4 @@ function renderResult(data){
 </script>
 </body>
 </html>
+
