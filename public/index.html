@@ -80,6 +80,33 @@ async function sendImage() {
   }
 
   resultDiv.innerHTML = '<div class="loader"></div>';
+
+  const base64 = await toBase64(file);
+
+  try {
+    const res = await fetch("/api/diagnose", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        image: base64,
+        species,
+        country
+      })
+    });
+
+    const data = await res.json();
+    
+    if (data.error) throw new Error(data.error);
+
+    resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+
+  } catch (err) {
+    resultDiv.innerHTML = `<p style="color:red">${err.message}</p>`;
+  }
+}
+
+
+  resultDiv.innerHTML = '<div class="loader"></div>';
   
 async function analyzeImage(base64Image) {
   const res = await fetch("/api/diagnose", {
