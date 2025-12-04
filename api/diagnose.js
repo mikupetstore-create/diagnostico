@@ -1,4 +1,4 @@
-console.log("API KEY CARGADA:", !!process.env.OPENAI_API_KEY);
+
 import OpenAI from "openai";
 
 export const config = {
