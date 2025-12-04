@@ -1,54 +1,5 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diagnóstico de Mascotas</title>
-
-<style>
-  body{font-family:Inter,system-ui,Arial;background:#fff;margin:0;padding:0;display:flex;align-items:center;justify-content:center;min-height:100vh}
-  .card{width:100%;max-width:480px;padding:20px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.07)}
-  h1{margin:0 0 8px;font-size:20px}
-  p{margin:0 0 12px;color:#555}
-  .uploader{border:2px dashed #e6e6e6;padding:14px;border-radius:10px;text-align:center;cursor:pointer;margin-top:10px}
-  input[type=file]{display:none}
-  .preview{margin-top:12px;width:100%;height:260px;object-fit:cover;border-radius:8px;display:none}
-  .btn{display:inline-block;padding:10px 14px;border-radius:10px;background:#06b6d4;color:#fff;border:0;cursor:pointer;margin-top:12px;width:100%}
-  .small{font-size:13px;color:#777;margin-top:8px}
-  .results{margin-top:16px}
-  .product{border:1px solid #eee;padding:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;margin-top:10px}
-  .product img{width:64px;height:64px;object-fit:cover;border-radius:6px}
-  .loader{display:inline-block;border:4px solid #f3f3f3;border-top:4px solid #06b6d4;border-radius:50%;width:28px;height:28px;animation:spin .9s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-</style>
-</head>
-
-<body>
-<div class="card">
-  <h1>Diagnóstico Veterinario</h1>
-  <p>Sube una foto de tu mascota para analizar posibles problemas de salud.</p>
-
-  <label>Especie</label>
-  <input id="species" type="text" placeholder="Ej: perro, gato" style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #ddd">
-
-  <label style="margin-top:10px">País</label>
-  <input id="country" type="text" placeholder="Ej: México, Colombia" style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #ddd">
-
-  <div class="uploader" onclick="document.getElementById('imageInput').click()">
-    Haz clic para subir una imagen
-    <input id="imageInput" type="file" accept="image/*">
-  </div>
-
-  <img id="preview" class="preview"/>
-
-  <button class="btn" onclick="sendImage()">Analizar imagen</button>
-
-  <div id="result" class="results"></div>
-</div>
-
 <script>
-
-// Convertir archivo a Base64
+// Convierte la imagen en Base64
 function toBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -58,16 +9,6 @@ function toBase64(file) {
   });
 }
 
-// Preview de la imagen
-document.getElementById("imageInput").addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const preview = document.getElementById("preview");
-  preview.src = URL.createObjectURL(file);
-  preview.style.display = "block";
-});
-
-// Enviar imagen a la API
 async function sendImage() {
   const resultDiv = document.getElementById("result");
   const species = document.getElementById("species").value;
@@ -81,12 +22,15 @@ async function sendImage() {
 
   resultDiv.innerHTML = '<div class="loader"></div>';
 
+  // Convertir imagen a base64
   const base64 = await toBase64(file);
 
   try {
     const res = await fetch("/api/diagnose", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         image: base64,
         species,
@@ -95,10 +39,11 @@ async function sendImage() {
     });
 
     const data = await res.json();
+
     if (data.error) throw new Error(data.error);
 
     resultDiv.innerHTML = `
-      <h3>Resultado</h3>
+      <h3>Diagnóstico</h3>
       <p>${data.diagnosis}</p>
     `;
 
@@ -106,8 +51,4 @@ async function sendImage() {
     resultDiv.innerHTML = `<p style="color:red"><strong>Error:</strong> ${err.message}</p>`;
   }
 }
-
 </script>
-
-</body>
-</html>
