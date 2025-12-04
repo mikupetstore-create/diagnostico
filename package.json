@@ -1,5 +1,8 @@
 {
-  "name": "mikupet",
+  "name": "mikupet-diagnostico",
   "version": "1.0.0",
-  "license": "MIT"
+  "type": "module",
+  "dependencies": {
+    "openai": "^4.0.0"
+  }
 }
