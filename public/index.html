@@ -71,6 +71,17 @@ async function sendImage() {
   }
 
   resultDiv.innerHTML = '<div class="loader"></div>';
+  
+async function analyzeImage(base64Image) {
+  const res = await fetch("/api/diagnose", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ image: base64Image })
+  });
+
+  const data = await res.json();
+  return data;
+}
 
   const reader = new FileReader();
   reader.onloadend = async () => {
