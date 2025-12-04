@@ -47,9 +47,10 @@
 </div>
 
 <script>
-const API = "https://diagnostico-14ds.vercel.app/index.html";  // ← IMPORTANTE: Apunta a Next.js API Route
+// ⬅ ESTA ES TU API REAL
+const API = "/api/diagnose";
 
-// Preview de la imagen
+// Preview de imagen
 document.getElementById("imageInput").addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -58,7 +59,6 @@ document.getElementById("imageInput").addEventListener("change", e => {
   preview.style.display = "block";
 });
 
-// Lógica principal del análisis
 async function sendImage() {
   const resultDiv = document.getElementById("result");
   const species = document.getElementById("species").value;
@@ -70,48 +70,36 @@ async function sendImage() {
     return;
   }
 
-  // Loader animado
   resultDiv.innerHTML = '<div class="loader"></div>';
-  
-  const fd = new FormData();
-  fd.append("image", file);
-  fd.append("species", species);
-  fd.append("country", country);
 
-  try {
-    const res = await fetch(API, { method: "POST", body: fd });
+  const reader = new FileReader();
+  reader.onloadend = async () => {
+    const base64Image = reader.result;
 
-    // Verificar si la respuesta es JSON
-    const contentType = res.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const text = await res.text();
-      throw new Error("La API devolvió HTML (404). Ruta no encontrada:\n" + text);
+    try {
+      const res = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image: base64Image,
+          species,
+          country
+        })
+      });
+
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+
+      resultDiv.innerHTML = `
+        <h3>Resultado</h3>
+        <p>${json.diagnosis}</p>
+      `;
+    } catch (err) {
+      resultDiv.innerHTML = `<p style="color:red"><strong>Error:</strong> ${err.message}</p>`;
     }
+  };
 
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-
-    // Render de resultados
-    resultDiv.innerHTML = `
-      <h3>Resultado</h3>
-      <p>${data.summary}</p>
-      <p><strong>Severidad:</strong> ${data.severity}</p>
-
-      <h3>Recomendaciones</h3>
-      ${data.recommendedProducts.map(p => `
-        <div class="product">
-          <div>
-            <strong>${p.title}</strong><br>
-            ${p.reason}<br>
-            <a href="${p.affiliateLink}" target="_blank">Comprar</a>
-          </div>
-          <img src="https://placekitten.com/64/64">
-        </div>
-      `).join("")}
-    `;
-  } catch (err) {
-    resultDiv.innerHTML = `<p style="color:red"><strong>Error:</strong> ${err.message}</p>`;
-  }
+  reader.readAsDataURL(file);
 }
 </script>
 </body>
