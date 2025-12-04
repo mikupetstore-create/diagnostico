@@ -6,72 +6,21 @@
   <title>Diagnóstico Veterinario</title>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-
-    h1 {
-      text-align: center;
-    }
-
-    label {
-      font-weight: bold;
-      margin-top: 10px;
-      display: block;
-    }
-
-    input[type="text"], input[type="file"] {
-      margin-top: 5px;
-      margin-bottom: 15px;
-      width: 100%;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      background: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #45a049;
-    }
-
-    #preview {
-      width: 100%;
-      max-height: 300px;
-      object-fit: cover;
-      margin-top: 10px;
-      display: none;
-      border-radius: 10px;
-    }
-
-    #result {
-      margin-top: 20px;
-      padding: 15px;
-      background: #fffbe6;
-      border-left: 4px solid #ffc107;
-      border-radius: 5px;
-      display: none;
-    }
-  </style>
-</head>
-
+  body{font-family:Inter,system-ui,Arial;background:#fff;margin:0;padding:0;display:flex;align-items:center;justify-content:center;min-height:100vh}
+  .card{width:100%;max-width:480px;padding:20px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.07)}
+  h1{margin:0 0 8px;font-size:20px}
+  p{margin:0 0 12px;color:#555}
+  .uploader{border:2px dashed #e6e6e6;padding:14px;border-radius:10px;text-align:center;cursor:pointer}
+  input[type=file]{display:none}
+  .preview{margin-top:12px;width:100%;height:260px;object-fit:cover;border-radius:8px}
+  .btn{display:inline-block;padding:10px 14px;border-radius:10px;background:#06b6d4;color:#fff;border:0;cursor:pointer;margin-top:12px}
+  .small{font-size:13px;color:#777;margin-top:8px}
+  .results{margin-top:16px}
+  .product{border:1px solid #eee;padding:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  .product img{width:64px;height:64px;object-fit:cover;border-radius:6px}
+  .loader{display:inline-block;border:4px solid #f3f3f3;border-top:4px solid #06b6d4;border-radius:50%;width:28px;height:28px;animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
 <body>
   <div class="container">
     <h1>Diagnóstico Veterinario</h1>
