@@ -1,77 +1,84 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diagnóstico de Mascotas</title>
-
-<style>
-  body{font-family:Inter,system-ui,Arial;background:#fff;margin:0;padding:0;display:flex;align-items:center;justify-content:center;min-height:100vh}
-  .card{width:100%;max-width:480px;padding:20px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.07)}
-  h1{margin:0 0 8px;font-size:20px}
-  p{margin:0 0 12px;color:#555}
-  .uploader{border:2px dashed #e6e6e6;padding:14px;border-radius:10px;text-align:center;cursor:pointer}
-  input[type=file]{display:none}
-  .preview{margin-top:12px;width:100%;height:260px;object-fit:cover;border-radius:8px;display:none}
-  .btn{display:inline-block;padding:10px 14px;border-radius:10px;background:#06b6d4;color:#fff;border:0;cursor:pointer;margin-top:12px;width:100%}
-  .small{font-size:13px;color:#777;margin-top:8px}
-  .results{margin-top:16px}
-  .loader{display:inline-block;border:4px solid #f3f3f3;border-top:4px solid #06b6d4;border-radius:50%;width:28px;height:28px;animation:spin .9s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagnóstico Mascota</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    button { padding: 10px 20px; margin-top: 10px; cursor: pointer; }
+    #preview { width: 100%; margin-top: 15px; display: none; }
+    #result { margin-top: 20px; white-space: pre-wrap; }
+  </style>
 </head>
-
 <body>
-<div class="card">
-  <h1>Diagnóstico Veterinario</h1>
-  <p>Sube una foto de tu mascota para analizar posibles problemas de salud.</p>
 
-  <label>Especie</label>
-  <input id="species" type="text" placeholder="Ej: perro, gato" style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #ddd">
+  <h2>Diagnóstico de Mascotas con IA</h2>
 
-  <label style="margin-top:10px">País</label>
-  <input id="country" type="text" placeholder="Ej: México, Colombia" style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #ddd">
+  <label>Especie:</label>
+  <input type="text" id="species" placeholder="Perro, gato..." /><br><br>
 
-  <div class="uploader" onclick="document.getElementById('imageInput').click()">
-    Haz clic para subir una imagen
-    <input id="imageInput" type="file" accept="image/*">
-  </div>
+  <label>País:</label>
+  <input type="text" id="country" placeholder="Colombia..." /><br><br>
 
-  <img id="preview" class="preview"/>
+  <input type="file" id="imageInput" accept="image/*" />
 
-  <button class="btn" onclick="sendImage()">Analizar imagen</button>
+  <img id="preview" />
 
-  <div id="result" class="results"></div>
-</div>
+  <button onclick="diagnose()">Analizar Imagen</button>
 
-<script>
-// ===============================
-// PREVIEW
-// ===============================
-document.getElementById("imageInput").addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const preview = document.getElementById("preview");
-  preview.src = URL.createObjectURL(file);
-  preview.style.display = "block";
-});
+  <h3>Resultado:</h3>
+  <div id="result"></div>
 
-// ===============================
-// Convertir imagen a Base64
-// ===============================
-function toBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = err => reject(err);
-  });
-}
+  <script>
+    const input = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
 
-// ===============================
-// ENVIAR IMAGEN AL BACKEND
-// ===============================
-async function sendImage() {
-  const resultDiv = document.getElementById("result");
-  const species = document.getElementById("species").value;
-  const country = document.getElementById("c
+    // Mostrar vista previa
+    input.addEventListener("change", () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        preview.src = reader.result;
+        preview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    async function diagnose() {
+      const file = input.files[0];
+      const species = document.getElementById("species").value;
+      const country = document.getElementById("country").value;
+
+      if (!file) {
+        alert("Sube una imagen");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result;
+
+        const response = await fetch("/api/diagnose", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            image: base64,
+            species,
+            country
+          })
+        });
+
+        const data = await response.json();
+        document.getElementById("result").innerText =
+          data.diagnosis || data.error || "Error desconocido";
+      };
+
+      reader.readAsDataURL(file);
+    }
+  </script>
+
+</body>
+</html>
