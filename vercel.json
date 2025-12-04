@@ -2,12 +2,10 @@
   "version": 2,
   "builds": [
     { "src": "api/diagnose.js", "use": "@vercel/node" },
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "script.js", "use": "@vercel/static" }
+    { "src": "public/**/*", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/diagnose", "dest": "/api/diagnose.js" },
-    { "src": "/script.js", "dest": "/script.js" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "src": "/(.*)", "dest": "public/$1" }
   ]
 }
